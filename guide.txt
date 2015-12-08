@@ -1,0 +1,129 @@
+---------------------------
+ NEW LOCAL DEV ENVIRONMENT
+---------------------------
+	Assumptions:
+		1) <newsite> is the name of the repo
+		2) You're using Git Bash and PHPStorm
+
+	Create new directory / pull repo [LOCAL]
+	-----------------------------------------
+		cd /c/sites/www/
+		git clone <link>
+		(should create /<newsite>/ dir, which is the root dir)
+
+	Create VM [LOCAL]
+	------------------
+		copy Vagrantfile into root dir, change vb.name to 'NewSite'
+		copy bootstrap.sh into root dir, change all instances of 'newsite'
+			vim bootstrap.sh
+			:%s/newsite/<newsite>/g (find / replace 'newsite' with <newsite>)
+		vagrant up (make sure it's using port 2222)
+		vagrant status (make sure it's running properly)
+		vagrant ssh
+
+	Create User & Create / Import Database [VAGRANT]
+	-------------------------------------------------
+		mysql -u root (no password)
+		// create database <newsite>; (shouldn't be needed)
+		use <newsite>;
+		grant all on <newsite>.* to root@localhost;
+		quit; (mysql)
+		mysql -u root <newsite> < <import file>.sql (via vagrant ssh)
+
+	New PHPStorm Project [PHPSTORM]
+	--------------------------------
+		Create new project from existing files
+		Choose: Source files are in a local directory, no web server is yet configured
+		Navigate to /www/<newsite>, click 'Project Root'
+
+	Add PHPStorm Deployment [PHPSTORM]
+	-----------------------------------
+		Navigate to Tools > Deployment > Configuration
+		Add deployment name & SFTP
+		Set connection settings
+			SFTP host: 		wwww.<newsite>.dev
+			Port: 			22
+			Root Path: 		/
+			User:			vagrant
+			Pass: 			vagrant
+			Web server: 	http://<SFTP host>
+		Set mappings
+			Local path: 	C:\sites\www\<newsite>
+			Deploy path: 	/var/www/html
+			Web path: 		/
+
+	Update Hosts File [NOTEPAD as administrator]
+	----------------------------
+		192.168.33.10 newsite.dev www.newsite.dev
+
+	Update Vagrant w/ Local Files [PHPSTORM]
+	-----------------------------------------
+		Right click on project folder (<newsite>) and click 'Upload To'
+
+	Install Magerun [VAGRANT]
+	--------------------------
+		// https://github.com/netz98/n98-magerun/wiki/Commands
+		wget http://files.magerun.net/n98-magerun-latest.phar -O n98-magerun.phar
+		sudo chmod +x ./n98-magerun.phar
+		sudo cp ./n98-magerun.phar /usr/local/bin/
+
+	Install Magerun Add-Ons [VAGRANT]
+	----------------------------------
+		// http://magerun.net/magerun-addons-by-peter-jaap-blaakmeer/
+		sudo mkdir -p ~/.n98-magerun/modules/
+		cd ~/.n98-magerun/modules/
+		sudo git clone https://github.com/peterjaap/magerun-addons.git
+
+	Create local.xml [VAGRANT]
+	---------------------------
+		From Site Root:
+		n98-magerun.phar local-config:generate
+			Host: 		localhost
+			User: 		root
+			Pass: 		(blank)
+			Database: 	<newsite>
+			Session: 	db
+			Admin: 		admin
+
+	Change Base URLs [VAGRANT]
+	---------------------------
+		From Site Root:
+		n98-magerun.phar sys:store:config:base-url:set
+			Scope: 		0 (Main shop)
+			Base URL: 	www.<newsite>.dev
+			Unsecure: 	[ENTER]
+			Secure: 	* Make sure secure url is http, not https
+			Defaults are ok for everything else
+
+	Add Database to PHPStorm [PHPSTORM]
+	------------------------------------
+		Click 'Database' tab on top right
+		Add new MySQL data source
+			General Tab:
+				User:  		root
+				Password: 	(blank)
+				URL: 		jdbc:mysql://localhost:3306/<newsite>
+							(Make sure the dropdown is set to 'URL only')
+			SSH / SSL Tab:
+				Use SSH tunnel: 	(checked)
+				Host: 				127.0.0.1
+				Port: 				2222
+				User: 				vagrant
+				Password: 			vagrant
+		
+		* NOTE: To test the connection to the db, vagrant up
+				Testing the SSH connection, vagrant ssh
+
+---------------------
+ GIT: CREATE NEW TAG
+---------------------
+
+	Merge new code into production branch
+	--------------------------------------
+		git tag -a v1.0.1 -m "Message describing reason for new version/tag"
+		git push origin v1.0.1
+		Create release on github off of tag
+		On prod server
+			<switch to website owner/user>
+			git fetch --all
+			git checkout -b v1.0.1 v1.0.1
