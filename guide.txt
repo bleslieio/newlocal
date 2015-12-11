@@ -4,12 +4,14 @@
 	Assumptions:
 		1) <newsite> is the name of the repo
 		2) You're using Git Bash and PHPStorm
+		3) /c/sites/www/ (C:\sites\www\) is a directory
+		4) You already have a copy of the database
 
 	Create new directory / pull repo [LOCAL]
 	-----------------------------------------
 		cd /c/sites/www/
 		git clone <link>
-		(should create /<newsite>/ dir, which is the root dir)
+		(should create <newsite> dir, which is the root dir)
 
 	Create VM [LOCAL]
 	------------------
@@ -114,6 +116,91 @@
 		* NOTE: To test the connection to the db, vagrant up
 				Testing the SSH connection, vagrant ssh
 
+-------------------
+ NEW CODE ANALYSIS
+-------------------
+	Assumptions:
+		1) <siteanalysis> is the name of the analysis
+		2) You're using Git Bash and PHPStorm
+		3) /c/sites/www/ (C:\sites\www\) is a directory
+
+	Create new directory [LOCAL]
+	-----------------------------
+		cd /c/sites/www/
+		mkdir <siteanalysis>
+
+	Create VM [LOCAL]
+	------------------
+		copy Vagrantfile into root dir, change vb.name to 'Site Analysis'
+		copy /c/sites/Analyze/bootstrap.sh into root dir, 
+		 change all instances of 'siteanalysis'
+			vim bootstrap.sh
+			:%s/siteanalysis/<siteanalysis>/g 
+		vagrant up (make sure it's using port 2222)
+		vagrant status (make sure it's running properly)
+		vagrant ssh
+
+	Update Vagrant w/ Local Files [LOCAL + VAGRANT]
+	------------------------------------------------
+		copy tar.gz into /c/www/sites/Vagrant/siteanalysis
+		vagrant ssh (within siteanalysis dir)
+		mv /vagrant_data/<siteanalysis>.tar.gz .
+		tar zxvf <siteanalysis>.tar.gz
+
+	Import Database
+	----------------
+		mysql -u root -p <siteanalysis> < <importfile>.sql
+
+	Create local.xml [VAGRANT]
+	---------------------------
+		From Site Root:
+		magerun local-config:generate
+			Host: 		localhost
+			User: 		root
+			Pass: 		(blank)
+			Database: 	<siteanalysis>
+			Session: 	db
+			Admin: 		admin
+
+	Change Base URLs [VAGRANT] (Requires Add-Ons)
+	---------------------------
+		From Site Root:
+		magerun sys:store:config:base-url:set
+			Scope: 		0 (Main shop)
+			Base URL: 	www.<siteanalysis>.dev
+			Unsecure: 	[ENTER]
+			Secure: 	* Make sure secure url is http, not https
+			Defaults are ok for everything else
+
+	Check Theme for Duplicates [VAGRANT]
+	-------------------------------------
+		magerun dev:theme:duplicates {packagename}
+
+	Diff Core [LOCAL]
+	------------------
+		diff -wqr magento/app/code/core/ magento-clean/app/code/core/
+
+	Check for Local Overrides [VAGRANT]
+	------------------------------------
+		if [ -d app/code/local/Mage ]; then echo 'Mage Directory in Local Codepool'; fi
+		if [ -d app/code/local/Enterprise ]; then echo 'Enterprise Directory in Local Codepool'; fi
+		if [ -d app/code/community/Mage ]; then echo 'Mage Directory in Community Codepool'; fi
+		if [ -d app/code/community/Enterprise ]; then echo 'Enterprise Directory in Community Codepool'; fi
+
+	Check for Rewrite Conflicts [VAGRANT]
+	--------------------------------------
+		magerun dev:module:rewrite:conflicts
+
+	Check Code Quality [VAGRANT]
+	-----------------------------
+		phpcs -pn --report-width=120 --report=summary  --standard=Ecg/ app/code/local/
+
+	Module Count [VAGRANT]
+	-----------------------
+		magerun dev:module:list --codepool=local --status=active
+		magerun dev:module:list --codepool=community --status=active
+
+
 ---------------------
  GIT: CREATE NEW TAG
 ---------------------
@@ -127,3 +214,17 @@
 			<switch to website owner/user>
 			git fetch --all
 			git checkout -b v1.0.1 v1.0.1
+
+--------------------------------
+NEW DATABASE IN ZEROLAG CONTROL
+--------------------------------
+	Click into environment
+	Click 'Add Account' in top right
+	Change dropdown to 'this is a linked database account'
+	Fill out form
+	Save
+
+---------------------------------------
+GIT: REMOVE LARGE FILE SO YOU CAN PUSH
+---------------------------------------
+	git filter-branch --index-filter 'git rm -r --cached --ignore-unmatch <file/dir>' HEAD
