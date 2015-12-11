@@ -43,8 +43,7 @@ echo "
 		<Directory '/var/www/html'>
 			Options Indexes FollowSymLinks MultiViews
 			AllowOverride All
-			Order allow,deny
-			allow from all
+			Require all granted
 		</Directory>
 
         ErrorLog ${APACHE_LOG_DIR}/error.log
