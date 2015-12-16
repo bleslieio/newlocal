@@ -1,0 +1,24 @@
+*.swp
+*.tmp
+*.LCK
+*.dump.sql
+.DS_Store
+Thumbs.db
+/.htaccess
+/images
+/media
+
+# Magento
+/media/*
+/resources
+/app/etc/local.xml
+/var/*
+/var
+
+# IDE
+.idea/
+
+# Vagrant
+Vagrantfile
+bootstrap.sh
+
