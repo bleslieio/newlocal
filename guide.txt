@@ -112,7 +112,7 @@
 				Port: 				2222
 				User: 				vagrant
 				Password: 			vagrant
-		
+
 		* NOTE: To test the connection to the db, vagrant up
 				Testing the SSH connection, vagrant ssh
 
@@ -200,6 +200,11 @@
 		magerun dev:module:list --codepool=local --status=active
 		magerun dev:module:list --codepool=community --status=active
 
+---------------------------------
+ GIT: ADD DEPLOYMENT TO NEW SITE
+---------------------------------
+	
+
 
 ---------------------
  GIT: CREATE NEW TAG
@@ -228,3 +233,4 @@ NEW DATABASE IN ZEROLAG CONTROL
 GIT: REMOVE LARGE FILE SO YOU CAN PUSH
 ---------------------------------------
 	git filter-branch --index-filter 'git rm -r --cached --ignore-unmatch <file/dir>' HEAD
+
