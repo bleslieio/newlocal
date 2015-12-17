@@ -6,6 +6,7 @@
 		2) You're using Git Bash and PHPStorm
 		3) /c/sites/www/ (C:\sites\www\) is a directory
 		4) You already have a copy of the database
+		4) You have 'newlocal' cloned in /c/sites/www/
 
 	Create new directory / pull repo [LOCAL]
 	-----------------------------------------
@@ -15,8 +16,12 @@
 
 	Create VM [LOCAL]
 	------------------
+		From Site Root:
 		copy Vagrantfile into root dir, change vb.name to 'NewSite'
+			cp ../newlocal/local/Vagrantfile .
+			vim Vagrantfile
 		copy bootstrap.sh into root dir, change all instances of 'newsite'
+			cp ../newlocal/local/bootstrap.sh .
 			vim bootstrap.sh
 			:%s/newsite/<newsite>/g (find / replace 'newsite' with <newsite>)
 		vagrant up (make sure it's using port 2222)
@@ -25,12 +30,16 @@
 
 	Create User & Create / Import Database [VAGRANT]
 	-------------------------------------------------
-		mysql -u root (no password)
-		// create database <newsite>; (shouldn't be needed)
-		use <newsite>;
-		grant all on <newsite>.* to root@localhost;
-		quit; (mysql)
+			// mysql -u root (no password) (shouldn't be needed)
+			// create database <newsite>; (shouldn't be needed)
+			// use <newsite>; (shouldn't be needed)
+			// grant all on <newsite>.* to root@localhost; (shouldn't be needed)
+			// quit; (mysql) (shouldn't be needed)
 		mysql -u root <newsite> < <import file>.sql (via vagrant ssh)
+
+	Update Hosts File [NOTEPAD as administrator]
+	---------------------------------------------
+		192.168.33.10 newsite.dev www.newsite.dev
 
 	New PHPStorm Project [PHPSTORM]
 	--------------------------------
@@ -53,10 +62,6 @@
 			Local path: 	C:\sites\www\<newsite>
 			Deploy path: 	/var/www/html
 			Web path: 		/
-
-	Update Hosts File [NOTEPAD as administrator]
-	----------------------------
-		192.168.33.10 newsite.dev www.newsite.dev
 
 	Update Vagrant w/ Local Files [PHPSTORM]
 	-----------------------------------------
@@ -131,8 +136,9 @@
 
 	Create VM [LOCAL]
 	------------------
-		copy Vagrantfile into root dir, change vb.name to 'Site Analysis'
-		copy /c/sites/Analyze/bootstrap.sh into root dir, 
+		copy /c/sites/www/newlocal/analysis/Vagrantfile into root dir, change vb.name to
+			'Site Analysis'
+		copy /c/sites/www/newlocal/analysis/bootstrap.sh into root dir, 
 		 change all instances of 'siteanalysis'
 			vim bootstrap.sh
 			:%s/siteanalysis/<siteanalysis>/g 
@@ -163,7 +169,7 @@
 			Admin: 		admin
 
 	Change Base URLs [VAGRANT] (Requires Add-Ons)
-	---------------------------
+	----------------------------------------------
 		From Site Root:
 		magerun sys:store:config:base-url:set
 			Scope: 		0 (Main shop)
