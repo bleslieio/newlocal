@@ -153,8 +153,8 @@
 		mv /vagrant_data/<siteanalysis>.tar.gz .
 		tar zxvf <siteanalysis>.tar.gz
 
-	Import Database
-	----------------
+	Import Database [VAGRANT]
+	--------------------------
 		mysql -u root -p <siteanalysis> < <importfile>.sql
 
 	Create local.xml [VAGRANT]
